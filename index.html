@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora RF Transportes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            min-height: 100vh;
+            padding: 0;
+            color: #333;
+        }
+
+        .wrapper {
+            display: flex;
+            min-height: 100vh;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .main-content {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .container {
+            width: 100%;
+        }
+
+        .header-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 50px 40px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .header-icon {
+            font-size: 2.5em;
+        }
+
+        .header-section h1 {
+            font-size: 2.2em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+
+        .header-section p {
+            font-size: 0.95em;
+            color: #666;
+            margin-top: 10px;
+            margin-bottom: 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f0f0f0;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            border-color: #e0e0e0;
+        }
+
+        .card-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9em;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .input-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-field label {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-field input {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .input-field input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #6366f1;
+            transition: all 0.3s;
+        }
+
+        .result-card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .truck-name {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #6366f1;
+            margin-bottom: 8px;
+        }
+
+        .truck-info {
+            font-size: 0.85em;
+            color: #999;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .stacking-content {
+            font-size: 0.9em;
+            line-height: 1.8;
+            color: #555;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #8b5cf6;
+        }
+
+        .stacking-content strong {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 0.95em;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .results-header {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .results-header-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8em;
+        }
+
+        @media (max-width: 768px) {
+            .wrapper {
+                padding: 15px;
+            }
+
+            .header-section {
+                padding: 30px 20px;
+                margin-bottom: 20px;
+            }
+
+            .header-section h1 {
+                font-size: 1.6em;
+            }
+
+            .header-icon {
+                font-size: 2em;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .input-group {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .result-card {
+                padding: 20px;
+            }
+
+            .truck-name {
+                font-size: 1.1em;
+            }
+
+            .stacking-content {
+                font-size: 0.85em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .wrapper {
+                padding: 10px;
+            }
+
+            .header-section {
+                padding: 20px 15px;
+            }
+
+            .header-section h1 {
+                font-size: 1.4em;
+            }
+
+            .header-icon {
+                font-size: 1.8em;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .card-title {
+                font-size: 1em;
+            }
+
+            .result-card {
+                padding: 15px;
+            }
+
+            .truck-name {
+                font-size: 1em;
+            }
+
+            .stacking-content {
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="main-content">
+            <div class="container">
+                <div class="header-section">
+                    <div class="header-title">
+                        <div class="header-icon">📦</div>
+                        <h1>RF Transportes</h1>
+                    </div>
+                    <p>Calculadora de Volumes - Otimize o empilhamento e verifique a compatibilidade com sua frota</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <div class="card-title-icon">📋</div>
+                        Quantidade de Carga
+                    </div>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="cx_qty">Engradados (cx)</label>
+                            <input type="number" id="cx_qty" value="0" min="0">
+                        </div>
+                        <div class="input-field">
+                            <label for="caixotao_qty">Caixotões</label>
+                            <input type="number" id="caixotao_qty" value="0" min="0">
+                        </div>
+                        <div class="input-field">
+                            <label for="ifco_qty">IFCOs</label>
+                            <input type="number" id="ifco_qty" value="0" min="0">
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button onclick="calcularVolume()">🔍 Calcular Compatibilidade</button>
+                    </div>
+                </div>
+
+                <div id="results">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <p>Insira as quantidades e clique em "Calcular Compatibilidade".</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dimensões da carga em CM (C x A x L)
+        const CARGO_DIMS = {
+            cx: { c: 55.0, a: 30.0, l: 36.0, nome: "Engradado (cx)" },
+            caixotao: { c: 77.5, a: 30.0, l: 57.5, nome: "Caixotão" },
+            ifco: { c: 60.0, a: 25.0, l: 39.0, nome: "IFCO" }
+        };
+
+        // Dimensões dos caminhões em METROS (C x L x A)
+        const TRUCK_DIMS_M = [
+            { nome: "Mini", c: 2.90, l: 1.66, a: 1.65 },
+            { nome: "Azul", c: 2.80, l: 1.82, a: 1.83 },
+            { nome: "Grandão", c: 3.16, l: 1.68, a: 2.13 },
+            { nome: "Big", c: 3.30, l: 1.80, a: 2.15 }
+        ];
+
+        // Converte as dimensões dos caminhões para CM e calcula o volume em cm³
+        const TRUCK_DIMS = TRUCK_DIMS_M.map(truck => ({
+            nome: truck.nome,
+            c: truck.c * 100,
+            l: truck.l * 100,
+            a: truck.a * 100,
+            volume_m3: (truck.c * truck.l * truck.a).toFixed(2)
+        })).sort((a, b) => a.c * a.l * a.a - b.c * b.l * b.a);
+
+        // Função para converter Markdown simples para HTML
+        function markdownToHtml(text) {
+            // Substitui **texto** por <strong>texto</strong>
+            return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        }
+
+        // Função principal de cálculo
+        function calcularVolume() {
+            const cx_qty = parseInt(document.getElementById('cx_qty').value) || 0;
+            const caixotao_qty = parseInt(document.getElementById('caixotao_qty').value) || 0;
+            const ifco_qty = parseInt(document.getElementById('ifco_qty').value) || 0;
+
+            const total_items = cx_qty + caixotao_qty + ifco_qty;
+
+            if (total_items === 0) {
+                document.getElementById('results').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <p>Insira as quantidades e clique em "Calcular Compatibilidade".</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const cargo_list = [];
+            if (cx_qty > 0) cargo_list.push({ ...CARGO_DIMS.cx, qty: cx_qty, id: 'cx' });
+            if (caixotao_qty > 0) cargo_list.push({ ...CARGO_DIMS.caixotao, qty: caixotao_qty, id: 'caixotao' });
+            if (ifco_qty > 0) cargo_list.push({ ...CARGO_DIMS.ifco, qty: ifco_qty, id: 'ifco' });
+
+            let compatible_trucks_html = '';
+
+            TRUCK_DIMS.forEach(truck => {
+                const { is_compatible, stacking_info } = checkTruckCompatibility(truck, cargo_list);
+
+                if (is_compatible) {
+                    // Converte Markdown para HTML
+                    const htmlStackingInfo = markdownToHtml(stacking_info);
+                    
+                    compatible_trucks_html += `
+                        <div class="result-card">
+                            <div class="truck-name">🚚 ${truck.nome}</div>
+                            <div class="truck-info">Dimensões: ${truck.c/100}m C × ${truck.l/100}m L × ${truck.a/100}m A | Volume: ${truck.volume_m3} m³</div>
+                            <div class="stacking-content">${htmlStackingInfo}</div>
+                        </div>
+                    `;
+                }
+            });
+
+            if (compatible_trucks_html) {
+                document.getElementById('results').innerHTML = `
+                    <div class="alert-success">✓ Compatível com os seguintes veículos (do menor para o maior)</div>
+                    ${compatible_trucks_html}
+                `;
+            } else {
+                document.getElementById('results').innerHTML = `
+                    <div class="alert-warning">⚠ Nenhum caminhão da frota é compatível com a carga informada.</div>
+                `;
+            }
+        }
+
+        /**
+         * Função para verificar a compatibilidade e gerar a sugestão de empilhamento.
+         */
+        function checkTruckCompatibility(truck, cargo_list) {
+            let stacking_info = `Otimização de empilhamento para o caminhão **${truck.nome}** (dimensões internas: ${truck.c/100}m C x ${truck.l/100}m L x ${truck.a/100}m A):\n\n`;
+            let remaining_c = truck.c;
+            let all_fit = true;
+            let total_volume_used = 0;
+
+            const cargo_to_pack = JSON.parse(JSON.stringify(cargo_list));
+            cargo_to_pack.sort((a, b) => (b.c * b.l) - (a.c * a.l));
+
+            for (const cargo of cargo_to_pack) {
+                const { id, nome, c, a, l, qty } = cargo;
+                if (qty === 0) continue;
+
+                const max_stack_height = (id === 'ifco') ? 5 : Math.floor(truck.a / a);
+                if (max_stack_height === 0) {
+                    all_fit = false;
+                    stacking_info += `- **${nome}**: INCOMPATÍVEL. A altura da caixa (${a}cm) é maior que a altura do caminhão (${truck.a}cm).\n`;
+                    break;
+                }
+
+                const num_stacks_needed = Math.ceil(qty / max_stack_height);
+
+                let stacks_across_floor1 = Math.floor(truck.l / l);
+                let num_rows1 = stacks_across_floor1 > 0 ? Math.ceil(num_stacks_needed / stacks_across_floor1) : Infinity;
+                let length_needed1 = num_rows1 * c;
+
+                let stacks_across_floor2 = Math.floor(truck.l / c);
+                let num_rows2 = stacks_across_floor2 > 0 ? Math.ceil(num_stacks_needed / stacks_across_floor2) : Infinity;
+                let length_needed2 = num_rows2 * l;
+
+                let chosen_length_needed = 0;
+                let packing_desc = '';
+                let stacks_across_floor = 0;
+                let num_rows = 0;
+                let box_length_used = 0;
+
+                if (length_needed1 <= remaining_c && length_needed1 <= length_needed2) {
+                    chosen_length_needed = length_needed1;
+                    stacks_across_floor = stacks_across_floor1;
+                    num_rows = num_rows1;
+                    box_length_used = c;
+                    remaining_c -= chosen_length_needed;
+                    
+                    if (stacks_across_floor === 0 && num_stacks_needed > 0) {
+                        all_fit = false;
+                        stacking_info += `- **${nome}**: INCOMPATÍVEL. Nenhuma orientação da caixa cabe na largura do caminhão (${truck.l}cm).\n`;
+                        break;
+                    }
+
+                    packing_desc = `  - **${nome}** (Qtd: ${qty}): Ocupará **${chosen_length_needed.toFixed(0)}cm** do comprimento do caminhão.\n    - Orientação: Lado de ${box_length_used}cm no Comprimento do caminhão.\n    - Serão feitas ${num_rows} fileiras de pilhas, com ${stacks_across_floor} pilhas lado a lado na largura.\n    - Cada pilha terá até ${max_stack_height} caixas de altura.`;
+                } else if (length_needed2 <= remaining_c) {
+                    chosen_length_needed = length_needed2;
+                    stacks_across_floor = stacks_across_floor2;
+                    num_rows = num_rows2;
+                    box_length_used = l;
+                    remaining_c -= chosen_length_needed;
+
+                    if (stacks_across_floor === 0 && num_stacks_needed > 0) {
+                        all_fit = false;
+                        stacking_info += `- **${nome}**: INCOMPATÍVEL. Nenhuma orientação da caixa cabe na largura do caminhão (${truck.l}cm).\n`;
+                        break;
+                    }
+
+                    packing_desc = `  - **${nome}** (Qtd: ${qty}): Ocupará **${chosen_length_needed.toFixed(0)}cm** do comprimento do caminhão.\n    - Orientação: Lado de ${box_length_used}cm no Comprimento do caminhão (Rotacionado).\n    - Serão feitas ${num_rows} fileiras de pilhas, com ${stacks_across_floor} pilhas lado a lado na largura.\n    - Cada pilha terá até ${max_stack_height} caixas de altura.`;
+                } else {
+                    all_fit = false;
+                    stacking_info += `- **${nome}**: INCOMPATÍVEL. Não há comprimento restante no caminhão para alocar as ${qty} unidades (Comprimento mínimo necessário: ${Math.min(length_needed1, length_needed2).toFixed(0)}cm).\n`;
+                    break;
+                }
+
+                if (chosen_length_needed > 0) {
+                    stacking_info += packing_desc + '\n';
+                    total_volume_used += qty * c * a * l;
+                }
+            }
+
+            if(all_fit) {
+                const total_truck_volume = truck.c * truck.l * truck.a;
+                const percentage_volume_used = (total_volume_used / total_truck_volume) * 100;
+                stacking_info += `\n**Comprimento Restante:** ${remaining_c.toFixed(0)}cm\n`;
+                stacking_info += `**Utilização de Volume (Aproximado):** ${percentage_volume_used.toFixed(2)}%\n`;
+            }
+
+            return {
+                is_compatible: all_fit,
+                stacking_info: stacking_info
+            };
+        }
+
+        // Inicializa com campos vazios
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('cx_qty').value = 0;
+            document.getElementById('caixotao_qty').value = 0;
+            document.getElementById('ifco_qty').value = 0;
+        });
+    </script>
+</body>
+</html>
