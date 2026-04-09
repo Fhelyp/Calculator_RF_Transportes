@@ -262,6 +262,17 @@
             margin-bottom: 20px;
         }
 
+        .alert-info {
+            background: #d1ecf1;
+            border: 2px solid #17a2b8;
+            color: #0c5460;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
         .results-header {
             font-size: 1.1em;
             font-weight: 600;
@@ -282,6 +293,94 @@
             justify-content: center;
             color: white;
             font-size: 0.8em;
+        }
+
+        /* Combination cards */
+        .combination-card {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #17a2b8;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .combination-card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .combo-summary {
+            padding: 20px 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .combo-summary:hover {
+            background: #f8f9fa;
+        }
+
+        .combo-rank {
+            background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+            color: white;
+            font-weight: 700;
+            font-size: 0.85em;
+            padding: 4px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        .combo-trucks {
+            font-weight: 700;
+            color: #333;
+            font-size: 1.1em;
+            flex: 1;
+        }
+
+        .combo-util {
+            font-size: 0.85em;
+            color: #666;
+            background: #f0f0f0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        .combo-split {
+            padding: 0 25px 15px;
+            font-size: 0.85em;
+            color: #888;
+            cursor: pointer;
+        }
+
+        .combo-expand-hint {
+            padding: 0 25px 15px;
+            font-size: 0.8em;
+            color: #17a2b8;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .combination-detail {
+            border-top: 1px solid #f0f0f0;
+            padding: 20px 25px;
+            background: #fafbfc;
+        }
+
+        .combination-detail .result-card {
+            margin-bottom: 15px;
+            border-left-color: #17a2b8;
+        }
+
+        .combination-detail .result-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .combination-detail .truck-name {
+            color: #17a2b8;
         }
 
         @media (max-width: 768px) {
@@ -326,6 +425,23 @@
             .stacking-content {
                 font-size: 0.85em;
             }
+
+            .combo-summary {
+                padding: 15px 20px;
+            }
+
+            .combo-trucks {
+                font-size: 1em;
+            }
+
+            .combo-split, .combo-expand-hint {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .combination-detail {
+                padding: 15px 20px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -363,6 +479,20 @@
 
             .stacking-content {
                 font-size: 0.8em;
+            }
+
+            .combo-summary {
+                padding: 12px 15px;
+                gap: 10px;
+            }
+
+            .combo-split, .combo-expand-hint {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+
+            .combination-detail {
+                padding: 12px 15px;
             }
         }
     </style>
@@ -414,14 +544,14 @@
     </div>
 
     <script>
-        // Dimensões da carga em CM (C x A x L)
+        // ========== DADOS ==========
+
         const CARGO_DIMS = {
             cx: { c: 55.0, a: 30.0, l: 36.0, nome: "Engradado (cx)" },
             caixotao: { c: 77.5, a: 30.0, l: 57.5, nome: "Caixotão" },
             ifco: { c: 60.0, a: 25.0, l: 39.0, nome: "IFCO" }
         };
 
-        // Dimensões dos caminhões em METROS (C x L x A)
         const TRUCK_DIMS_M = [
             { nome: "Mini", c: 2.90, l: 1.66, a: 1.65 },
             { nome: "Azul", c: 2.80, l: 1.82, a: 1.83 },
@@ -431,7 +561,6 @@
             { nome: "Novinho", c: 3.92, l: 2.07, a: 1.78 }
         ];
 
-        // Converte as dimensões dos caminhões para CM e calcula o volume em cm³
         const TRUCK_DIMS = TRUCK_DIMS_M.map(truck => ({
             nome: truck.nome,
             c: truck.c * 100,
@@ -440,13 +569,360 @@
             volume_m3: (truck.c * truck.l * truck.a).toFixed(2)
         })).sort((a, b) => a.c * a.l * a.a - b.c * b.l * b.a);
 
-        // Função para converter Markdown simples para HTML
+        // ========== UTILITARIOS ==========
+
         function markdownToHtml(text) {
-            // Substitui **texto** por <strong>texto</strong>
             return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         }
 
-        // Função principal de cálculo
+        function getPermutations(arr) {
+            if (arr.length <= 1) return [arr];
+            const result = [];
+            for (let i = 0; i < arr.length; i++) {
+                const rest = [...arr.slice(0, i), ...arr.slice(i + 1)];
+                for (const perm of getPermutations(rest)) {
+                    result.push([arr[i], ...perm]);
+                }
+            }
+            return result;
+        }
+
+        function cartesianProduct(arrays) {
+            if (arrays.length === 0) return [[]];
+            return arrays.reduce((acc, curr) => {
+                const result = [];
+                for (const a of acc) {
+                    for (const b of curr) {
+                        result.push([...a, b]);
+                    }
+                }
+                return result;
+            }, [[]]);
+        }
+
+        // Gera todas as orientacoes validas de uma caixa dentro de um caminhao
+        function getValidOrientations(cargo, truckHeight, truckWidth) {
+            const dims = [cargo.c, cargo.l, cargo.a];
+            const seen = new Set();
+            const orientations = [];
+            const perms = [
+                [0,1,2], [0,2,1], [1,0,2], [1,2,0], [2,0,1], [2,1,0]
+            ];
+            for (const [ai, bi, ci] of perms) {
+                const along = dims[ai], across = dims[bi], up = dims[ci];
+                const key = `${along}-${across}-${up}`;
+                if (seen.has(key)) continue;
+                seen.add(key);
+
+                // A caixa precisa caber na altura e na largura do caminhao
+                if (up > truckHeight) continue;
+                if (across > truckWidth) continue;
+
+                let maxStack;
+                if (cargo.id === 'ifco') {
+                    maxStack = Math.min(5, Math.floor(truckHeight / up));
+                } else {
+                    maxStack = Math.floor(truckHeight / up);
+                }
+                if (maxStack === 0) continue;
+
+                orientations.push({ along, across, up, maxStack });
+            }
+            return orientations;
+        }
+
+        // ========== ALGORITMO DE EMPACOTAMENTO ==========
+
+        // Tenta empacotar uma lista ordenada de cargas em um caminhao
+        function tryPackOrdering(truck, orderedCargoList) {
+            let remainingLength = truck.c;
+            const placements = [];
+            let totalVolumeUsed = 0;
+
+            for (const cargo of orderedCargoList) {
+                if (cargo.qty === 0) continue;
+
+                const orientations = getValidOrientations(cargo, truck.a, truck.l);
+                if (orientations.length === 0) {
+                    return { fits: false };
+                }
+
+                let bestOri = null;
+                let bestLength = Infinity;
+                let bestGap = Infinity;
+                let bestStacksPerRow = 0;
+                let bestRows = 0;
+
+                for (const ori of orientations) {
+                    const stacksPerRow = Math.floor(truck.l / ori.across);
+                    if (stacksPerRow === 0) continue;
+
+                    const stacksNeeded = Math.ceil(cargo.qty / ori.maxStack);
+                    const rows = Math.ceil(stacksNeeded / stacksPerRow);
+                    const lengthNeeded = rows * ori.along;
+                    const gap = truck.l - (stacksPerRow * ori.across);
+
+                    if (lengthNeeded < bestLength || (lengthNeeded === bestLength && gap < bestGap)) {
+                        bestOri = ori;
+                        bestLength = lengthNeeded;
+                        bestGap = gap;
+                        bestStacksPerRow = stacksPerRow;
+                        bestRows = rows;
+                    }
+                }
+
+                if (!bestOri || bestLength > remainingLength) {
+                    return { fits: false };
+                }
+
+                remainingLength -= bestLength;
+                totalVolumeUsed += cargo.qty * cargo.c * cargo.a * cargo.l;
+
+                placements.push({
+                    cargoId: cargo.id,
+                    cargoNome: cargo.nome,
+                    qty: cargo.qty,
+                    orientation: bestOri,
+                    rows: bestRows,
+                    stacksPerRow: bestStacksPerRow,
+                    lengthUsed: bestLength,
+                    gapWidth: bestGap
+                });
+            }
+
+            const totalTruckVolume = truck.c * truck.l * truck.a;
+            const utilization = totalVolumeUsed / totalTruckVolume;
+
+            return {
+                fits: true,
+                utilization,
+                volumeUsed: totalVolumeUsed,
+                totalTruckVolume,
+                remainingLength,
+                placements
+            };
+        }
+
+        // Testa todas as permutacoes de ordem de carga e retorna o melhor resultado
+        function packCargoInTruck(truck, cargoList) {
+            const activeCargo = cargoList.filter(c => c.qty > 0);
+            if (activeCargo.length === 0) {
+                return {
+                    fits: true,
+                    utilization: 0,
+                    volumeUsed: 0,
+                    totalTruckVolume: truck.c * truck.l * truck.a,
+                    remainingLength: truck.c,
+                    placements: []
+                };
+            }
+
+            const permutations = getPermutations(activeCargo);
+            let bestResult = { fits: false };
+
+            for (const perm of permutations) {
+                const result = tryPackOrdering(truck, perm);
+                if (result.fits) {
+                    if (!bestResult.fits || result.utilization > bestResult.utilization) {
+                        bestResult = result;
+                    }
+                }
+            }
+
+            return bestResult;
+        }
+
+        // ========== MULTI-CAMINHAO ==========
+
+        function generateSplits(cargoList) {
+            const splitFractions = [0, 0.25, 0.5, 0.75, 1.0];
+
+            const typeSplits = cargoList.map(cargo => {
+                const splits = new Set();
+                for (const frac of splitFractions) {
+                    splits.add(Math.round(cargo.qty * frac));
+                }
+                return [...splits];
+            });
+
+            const combos = cartesianProduct(typeSplits);
+
+            return combos.map(combo => {
+                const split1 = cargoList.map((c, i) => ({ ...c, qty: combo[i] }));
+                const split2 = cargoList.map((c, i) => ({ ...c, qty: c.qty - combo[i] }));
+                return [split1, split2];
+            });
+        }
+
+        function scoreCombination(combo) {
+            const totalWasted = combo.trucks.reduce((sum, t) => {
+                return sum + (t.packingResult.totalTruckVolume - t.packingResult.volumeUsed);
+            }, 0);
+            const truckSizePenalty = combo.trucks.reduce((sum, t) => {
+                return sum + t.packingResult.totalTruckVolume;
+            }, 0);
+            return totalWasted + truckSizePenalty * 0.1;
+        }
+
+        function findMultiTruckCombinations(cargoList) {
+            const combinations = [];
+            const splits = generateSplits(cargoList);
+            const seen = new Set();
+
+            for (let i = 0; i < TRUCK_DIMS.length; i++) {
+                for (let j = i; j < TRUCK_DIMS.length; j++) {
+                    const truck1 = TRUCK_DIMS[i];
+                    const truck2 = TRUCK_DIMS[j];
+
+                    for (const [split1, split2] of splits) {
+                        // Pula se algum split tem toda a carga zerada
+                        const total1 = split1.reduce((s, c) => s + c.qty, 0);
+                        const total2 = split2.reduce((s, c) => s + c.qty, 0);
+                        if (total1 === 0 || total2 === 0) continue;
+
+                        const result1 = packCargoInTruck(truck1, split1);
+                        const result2 = packCargoInTruck(truck2, split2);
+
+                        if (result1.fits && result2.fits) {
+                            // Cria chave para evitar duplicatas
+                            const splitKey = `${truck1.nome}-${truck2.nome}-${split1.map(c=>c.qty).join(',')}-${split2.map(c=>c.qty).join(',')}`;
+                            if (seen.has(splitKey)) continue;
+                            seen.add(splitKey);
+
+                            const combo = {
+                                trucks: [
+                                    {
+                                        truck: truck1,
+                                        packingResult: result1,
+                                        cargoCounts: Object.fromEntries(split1.map(c => [c.id, c.qty]))
+                                    },
+                                    {
+                                        truck: truck2,
+                                        packingResult: result2,
+                                        cargoCounts: Object.fromEntries(split2.map(c => [c.id, c.qty]))
+                                    }
+                                ]
+                            };
+                            combo.score = scoreCombination(combo);
+
+                            const totalVolume = combo.trucks.reduce((s, t) => s + t.packingResult.totalTruckVolume, 0);
+                            const totalUsed = combo.trucks.reduce((s, t) => s + t.packingResult.volumeUsed, 0);
+                            combo.totalUtilization = totalUsed / totalVolume;
+
+                            combinations.push(combo);
+                        }
+                    }
+                }
+            }
+
+            combinations.sort((a, b) => a.score - b.score);
+            return combinations.slice(0, 5);
+        }
+
+        // ========== RENDERIZACAO ==========
+
+        function formatPackingDescription(truck, packingResult) {
+            let text = `Empilhamento otimizado para **${truck.nome}** (${truck.c/100}m C x ${truck.l/100}m L x ${truck.a/100}m A):\n\n`;
+
+            for (const p of packingResult.placements) {
+                text += `  - **${p.cargoNome}** (Qtd: ${p.qty}): Ocupa **${p.lengthUsed.toFixed(0)}cm** do comprimento.\n`;
+                text += `    - Orientacao: ${p.orientation.along.toFixed(0)}cm no comprimento, ${p.orientation.across.toFixed(0)}cm na largura, ${p.orientation.up.toFixed(0)}cm na altura.\n`;
+                text += `    - ${p.rows} fileira(s) com ${p.stacksPerRow} pilha(s) lado a lado.\n`;
+                text += `    - Cada pilha: ate ${p.orientation.maxStack} unidade(s) de altura.\n`;
+                if (p.gapWidth > 0) {
+                    text += `    - Sobra na largura: ${p.gapWidth.toFixed(0)}cm.\n`;
+                }
+                text += '\n';
+            }
+
+            text += `**Comprimento Restante:** ${packingResult.remainingLength.toFixed(0)}cm\n`;
+            text += `**Utilizacao de Volume:** ${(packingResult.utilization * 100).toFixed(1)}%\n`;
+
+            return text;
+        }
+
+        function renderSingleTruckResult(truck, packingResult) {
+            const description = formatPackingDescription(truck, packingResult);
+            const htmlDesc = markdownToHtml(description);
+            return `
+                <div class="result-card">
+                    <div class="truck-name">🚚 ${truck.nome}</div>
+                    <div class="truck-info">Dimensoes: ${truck.c/100}m C x ${truck.l/100}m L x ${truck.a/100}m A | Volume: ${truck.volume_m3} m³</div>
+                    <div class="stacking-content">${htmlDesc}</div>
+                </div>
+            `;
+        }
+
+        function formatCargoSplit(cargoCounts, cargoList) {
+            const parts = [];
+            for (const cargo of cargoList) {
+                const qty = cargoCounts[cargo.id] || 0;
+                if (qty > 0) {
+                    parts.push(`${qty}x ${cargo.nome}`);
+                }
+            }
+            return parts.join(', ');
+        }
+
+        function renderCombinationCards(combinations, cargoList) {
+            let html = '';
+
+            combinations.forEach((combo, index) => {
+                const t1 = combo.trucks[0];
+                const t2 = combo.trucks[1];
+                const split1Text = formatCargoSplit(t1.cargoCounts, cargoList);
+                const split2Text = formatCargoSplit(t2.cargoCounts, cargoList);
+                const utilText = (combo.totalUtilization * 100).toFixed(1);
+
+                const detail1 = formatPackingDescription(t1.truck, t1.packingResult);
+                const detail2 = formatPackingDescription(t2.truck, t2.packingResult);
+
+                html += `
+                    <div class="combination-card">
+                        <div class="combo-summary" onclick="toggleComboDetail(${index})">
+                            <span class="combo-rank">#${index + 1}</span>
+                            <span class="combo-trucks">🚚 ${t1.truck.nome} + 🚚 ${t2.truck.nome}</span>
+                            <span class="combo-util">Utilizacao: ${utilText}%</span>
+                        </div>
+                        <div class="combo-split" onclick="toggleComboDetail(${index})">
+                            ${t1.truck.nome}: ${split1Text} | ${t2.truck.nome}: ${split2Text}
+                        </div>
+                        <div class="combo-expand-hint" onclick="toggleComboDetail(${index})" id="combo-hint-${index}">
+                            ▶ Clique para ver o plano de armazenamento
+                        </div>
+                        <div class="combination-detail" id="combo-detail-${index}" style="display:none;">
+                            <div class="result-card">
+                                <div class="truck-name">🚚 ${t1.truck.nome}</div>
+                                <div class="truck-info">Dimensoes: ${t1.truck.c/100}m C x ${t1.truck.l/100}m L x ${t1.truck.a/100}m A | Volume: ${t1.truck.volume_m3} m³</div>
+                                <div class="stacking-content">${markdownToHtml(detail1)}</div>
+                            </div>
+                            <div class="result-card">
+                                <div class="truck-name">🚚 ${t2.truck.nome}</div>
+                                <div class="truck-info">Dimensoes: ${t2.truck.c/100}m C x ${t2.truck.l/100}m L x ${t2.truck.a/100}m A | Volume: ${t2.truck.volume_m3} m³</div>
+                                <div class="stacking-content">${markdownToHtml(detail2)}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            return html;
+        }
+
+        function toggleComboDetail(index) {
+            const detail = document.getElementById(`combo-detail-${index}`);
+            const hint = document.getElementById(`combo-hint-${index}`);
+            if (detail.style.display === 'none') {
+                detail.style.display = 'block';
+                hint.textContent = '▼ Ocultar plano de armazenamento';
+            } else {
+                detail.style.display = 'none';
+                hint.textContent = '▶ Clique para ver o plano de armazenamento';
+            }
+        }
+
+        // ========== FUNCAO PRINCIPAL ==========
+
         function calcularVolume() {
             const cx_qty = parseInt(document.getElementById('cx_qty').value) || 0;
             const caixotao_qty = parseInt(document.getElementById('caixotao_qty').value) || 0;
@@ -464,135 +940,45 @@
                 return;
             }
 
-            const cargo_list = [];
-            if (cx_qty > 0) cargo_list.push({ ...CARGO_DIMS.cx, qty: cx_qty, id: 'cx' });
-            if (caixotao_qty > 0) cargo_list.push({ ...CARGO_DIMS.caixotao, qty: caixotao_qty, id: 'caixotao' });
-            if (ifco_qty > 0) cargo_list.push({ ...CARGO_DIMS.ifco, qty: ifco_qty, id: 'ifco' });
+            const cargoList = [];
+            if (cx_qty > 0) cargoList.push({ ...CARGO_DIMS.cx, qty: cx_qty, id: 'cx' });
+            if (caixotao_qty > 0) cargoList.push({ ...CARGO_DIMS.caixotao, qty: caixotao_qty, id: 'caixotao' });
+            if (ifco_qty > 0) cargoList.push({ ...CARGO_DIMS.ifco, qty: ifco_qty, id: 'ifco' });
 
-            let compatible_trucks_html = '';
-
-            TRUCK_DIMS.forEach(truck => {
-                const { is_compatible, stacking_info } = checkTruckCompatibility(truck, cargo_list);
-
-                if (is_compatible) {
-                    // Converte Markdown para HTML
-                    const htmlStackingInfo = markdownToHtml(stacking_info);
-                    
-                    compatible_trucks_html += `
-                        <div class="result-card">
-                            <div class="truck-name">🚚 ${truck.nome}</div>
-                            <div class="truck-info">Dimensões: ${truck.c/100}m C × ${truck.l/100}m L × ${truck.a/100}m A | Volume: ${truck.volume_m3} m³</div>
-                            <div class="stacking-content">${htmlStackingInfo}</div>
-                        </div>
-                    `;
+            // Tenta caminhao unico
+            let singleTruckHtml = '';
+            for (const truck of TRUCK_DIMS) {
+                const result = packCargoInTruck(truck, cargoList);
+                if (result.fits) {
+                    singleTruckHtml += renderSingleTruckResult(truck, result);
                 }
-            });
+            }
 
-            if (compatible_trucks_html) {
+            if (singleTruckHtml) {
                 document.getElementById('results').innerHTML = `
-                    <div class="alert-success">✓ Compatível com os seguintes veículos (do menor para o maior)</div>
-                    ${compatible_trucks_html}
+                    <div class="alert-success">✓ Compativel com os seguintes veiculos (do menor para o maior)</div>
+                    ${singleTruckHtml}
+                `;
+                return;
+            }
+
+            // Nenhum caminhao unico cabe — tenta combinacoes de 2
+            const combinations = findMultiTruckCombinations(cargoList);
+
+            if (combinations.length > 0) {
+                const comboHtml = renderCombinationCards(combinations, cargoList);
+                document.getElementById('results').innerHTML = `
+                    <div class="alert-info">📦 A carga nao cabe em um unico caminhao. Veja as melhores combinacoes de 2 veiculos:</div>
+                    ${comboHtml}
                 `;
             } else {
                 document.getElementById('results').innerHTML = `
-                    <div class="alert-warning">⚠ Nenhum caminhão da frota é compatível com a carga informada.</div>
+                    <div class="alert-warning">⚠ A carga excede a capacidade de qualquer combinacao de 2 caminhoes da frota.</div>
                 `;
             }
         }
 
-        /**
-         * Função para verificar a compatibilidade e gerar a sugestão de empilhamento.
-         */
-        function checkTruckCompatibility(truck, cargo_list) {
-            let stacking_info = `Otimização de empilhamento para o caminhão **${truck.nome}** (dimensões internas: ${truck.c/100}m C x ${truck.l/100}m L x ${truck.a/100}m A):\n\n`;
-            let remaining_c = truck.c;
-            let all_fit = true;
-            let total_volume_used = 0;
-
-            const cargo_to_pack = JSON.parse(JSON.stringify(cargo_list));
-            cargo_to_pack.sort((a, b) => (b.c * b.l) - (a.c * a.l));
-
-            for (const cargo of cargo_to_pack) {
-                const { id, nome, c, a, l, qty } = cargo;
-                if (qty === 0) continue;
-
-                const max_stack_height = (id === 'ifco') ? 5 : Math.floor(truck.a / a);
-                if (max_stack_height === 0) {
-                    all_fit = false;
-                    stacking_info += `- **${nome}**: INCOMPATÍVEL. A altura da caixa (${a}cm) é maior que a altura do caminhão (${truck.a}cm).\n`;
-                    break;
-                }
-
-                const num_stacks_needed = Math.ceil(qty / max_stack_height);
-
-                let stacks_across_floor1 = Math.floor(truck.l / l);
-                let num_rows1 = stacks_across_floor1 > 0 ? Math.ceil(num_stacks_needed / stacks_across_floor1) : Infinity;
-                let length_needed1 = num_rows1 * c;
-
-                let stacks_across_floor2 = Math.floor(truck.l / c);
-                let num_rows2 = stacks_across_floor2 > 0 ? Math.ceil(num_stacks_needed / stacks_across_floor2) : Infinity;
-                let length_needed2 = num_rows2 * l;
-
-                let chosen_length_needed = 0;
-                let packing_desc = '';
-                let stacks_across_floor = 0;
-                let num_rows = 0;
-                let box_length_used = 0;
-
-                if (length_needed1 <= remaining_c && length_needed1 <= length_needed2) {
-                    chosen_length_needed = length_needed1;
-                    stacks_across_floor = stacks_across_floor1;
-                    num_rows = num_rows1;
-                    box_length_used = c;
-                    remaining_c -= chosen_length_needed;
-                    
-                    if (stacks_across_floor === 0 && num_stacks_needed > 0) {
-                        all_fit = false;
-                        stacking_info += `- **${nome}**: INCOMPATÍVEL. Nenhuma orientação da caixa cabe na largura do caminhão (${truck.l}cm).\n`;
-                        break;
-                    }
-
-                    packing_desc = `  - **${nome}** (Qtd: ${qty}): Ocupará **${chosen_length_needed.toFixed(0)}cm** do comprimento do caminhão.\n    - Orientação: Lado de ${box_length_used}cm no Comprimento do caminhão.\n    - Serão feitas ${num_rows} fileiras de pilhas, com ${stacks_across_floor} pilhas lado a lado na largura.\n    - Cada pilha terá até ${max_stack_height} caixas de altura.`;
-                } else if (length_needed2 <= remaining_c) {
-                    chosen_length_needed = length_needed2;
-                    stacks_across_floor = stacks_across_floor2;
-                    num_rows = num_rows2;
-                    box_length_used = l;
-                    remaining_c -= chosen_length_needed;
-
-                    if (stacks_across_floor === 0 && num_stacks_needed > 0) {
-                        all_fit = false;
-                        stacking_info += `- **${nome}**: INCOMPATÍVEL. Nenhuma orientação da caixa cabe na largura do caminhão (${truck.l}cm).\n`;
-                        break;
-                    }
-
-                    packing_desc = `  - **${nome}** (Qtd: ${qty}): Ocupará **${chosen_length_needed.toFixed(0)}cm** do comprimento do caminhão.\n    - Orientação: Lado de ${box_length_used}cm no Comprimento do caminhão (Rotacionado).\n    - Serão feitas ${num_rows} fileiras de pilhas, com ${stacks_across_floor} pilhas lado a lado na largura.\n    - Cada pilha terá até ${max_stack_height} caixas de altura.`;
-                } else {
-                    all_fit = false;
-                    stacking_info += `- **${nome}**: INCOMPATÍVEL. Não há comprimento restante no caminhão para alocar as ${qty} unidades (Comprimento mínimo necessário: ${Math.min(length_needed1, length_needed2).toFixed(0)}cm).\n`;
-                    break;
-                }
-
-                if (chosen_length_needed > 0) {
-                    stacking_info += packing_desc + '\n';
-                    total_volume_used += qty * c * a * l;
-                }
-            }
-
-            if(all_fit) {
-                const total_truck_volume = truck.c * truck.l * truck.a;
-                const percentage_volume_used = (total_volume_used / total_truck_volume) * 100;
-                stacking_info += `\n**Comprimento Restante:** ${remaining_c.toFixed(0)}cm\n`;
-                stacking_info += `**Utilização de Volume (Aproximado):** ${percentage_volume_used.toFixed(2)}%\n`;
-            }
-
-            return {
-                is_compatible: all_fit,
-                stacking_info: stacking_info
-            };
-        }
-
-        // Inicializa com campos vazios
+        // Inicializa
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('cx_qty').value = 0;
             document.getElementById('caixotao_qty').value = 0;
