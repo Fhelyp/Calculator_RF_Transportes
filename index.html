@@ -764,17 +764,17 @@
         }
 
         function findMultiTruckCombinations(cargoList) {
-            const combinations = [];
+            // Para cada par de caminhoes, guarda apenas a melhor divisao de carga
+            const bestPerPair = {};
             const splits = generateSplits(cargoList);
-            const seen = new Set();
 
             for (let i = 0; i < TRUCK_DIMS.length; i++) {
                 for (let j = i; j < TRUCK_DIMS.length; j++) {
                     const truck1 = TRUCK_DIMS[i];
                     const truck2 = TRUCK_DIMS[j];
+                    const pairKey = `${truck1.nome} + ${truck2.nome}`;
 
                     for (const [split1, split2] of splits) {
-                        // Pula se algum split tem toda a carga zerada
                         const total1 = split1.reduce((s, c) => s + c.qty, 0);
                         const total2 = split2.reduce((s, c) => s + c.qty, 0);
                         if (total1 === 0 || total2 === 0) continue;
@@ -783,11 +783,6 @@
                         const result2 = packCargoInTruck(truck2, split2);
 
                         if (result1.fits && result2.fits) {
-                            // Cria chave para evitar duplicatas
-                            const splitKey = `${truck1.nome}-${truck2.nome}-${split1.map(c=>c.qty).join(',')}-${split2.map(c=>c.qty).join(',')}`;
-                            if (seen.has(splitKey)) continue;
-                            seen.add(splitKey);
-
                             const combo = {
                                 trucks: [
                                     {
@@ -807,13 +802,18 @@
                             const totalVolume = combo.trucks.reduce((s, t) => s + t.packingResult.totalTruckVolume, 0);
                             const totalUsed = combo.trucks.reduce((s, t) => s + t.packingResult.volumeUsed, 0);
                             combo.totalUtilization = totalUsed / totalVolume;
+                            combo.pairKey = pairKey;
 
-                            combinations.push(combo);
+                            // Guarda so a melhor divisao para este par
+                            if (!bestPerPair[pairKey] || combo.score < bestPerPair[pairKey].score) {
+                                bestPerPair[pairKey] = combo;
+                            }
                         }
                     }
                 }
             }
 
+            const combinations = Object.values(bestPerPair);
             combinations.sort((a, b) => a.score - b.score);
             return combinations.slice(0, 5);
         }
