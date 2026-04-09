@@ -601,33 +601,32 @@
         }
 
         // Gera todas as orientacoes validas de uma caixa dentro de um caminhao
+        // Caixas sao abertas em cima (hortalicas), so permite rotacao horizontal.
+        // A altura (a) sempre fica para cima. Testa 2 orientacoes: c/l e l/c no chao.
         function getValidOrientations(cargo, truckHeight, truckWidth) {
-            const dims = [cargo.c, cargo.l, cargo.a];
-            const seen = new Set();
             const orientations = [];
-            const perms = [
-                [0,1,2], [0,2,1], [1,0,2], [1,2,0], [2,0,1], [2,1,0]
-            ];
-            for (const [ai, bi, ci] of perms) {
-                const along = dims[ai], across = dims[bi], up = dims[ci];
-                const key = `${along}-${across}-${up}`;
-                if (seen.has(key)) continue;
-                seen.add(key);
+            const up = cargo.a;
 
-                // A caixa precisa caber na altura e na largura do caminhao
-                if (up > truckHeight) continue;
-                if (across > truckWidth) continue;
+            if (up > truckHeight) return orientations;
 
-                let maxStack;
-                if (cargo.id === 'ifco') {
-                    maxStack = Math.min(5, Math.floor(truckHeight / up));
-                } else {
-                    maxStack = Math.floor(truckHeight / up);
-                }
-                if (maxStack === 0) continue;
-
-                orientations.push({ along, across, up, maxStack });
+            let maxStack;
+            if (cargo.id === 'ifco') {
+                maxStack = Math.min(5, Math.floor(truckHeight / up));
+            } else {
+                maxStack = Math.floor(truckHeight / up);
             }
+            if (maxStack === 0) return orientations;
+
+            // Orientacao 1: c no comprimento, l na largura
+            if (cargo.l <= truckWidth) {
+                orientations.push({ along: cargo.c, across: cargo.l, up, maxStack });
+            }
+
+            // Orientacao 2: l no comprimento, c na largura (rotacionado 90 graus)
+            if (cargo.c <= truckWidth && (cargo.c !== cargo.l)) {
+                orientations.push({ along: cargo.l, across: cargo.c, up, maxStack });
+            }
+
             return orientations;
         }
 
