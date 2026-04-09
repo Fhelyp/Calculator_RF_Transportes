@@ -769,7 +769,7 @@
             const splits = generateSplits(cargoList);
 
             for (let i = 0; i < TRUCK_DIMS.length; i++) {
-                for (let j = i; j < TRUCK_DIMS.length; j++) {
+                for (let j = i + 1; j < TRUCK_DIMS.length; j++) {
                     const truck1 = TRUCK_DIMS[i];
                     const truck2 = TRUCK_DIMS[j];
                     const pairKey = `${truck1.nome} + ${truck2.nome}`;
